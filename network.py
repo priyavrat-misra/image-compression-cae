@@ -4,13 +4,15 @@ import torch.nn as nn
 class ConvAutoEncoder(nn.Module):
     def __init__(self, pretrained_model):
         super().__init__()
-        self.encoder = nn.Sequential(*list(pretrained_model.children())[:2])
-        self.compressor = nn.Sequential(
+        self.encoder = nn.Sequential(
+            *list(pretrained_model.layer1.children()),
+            *list(pretrained_model.layer2.children()),
             nn.Conv2d(in_channels=32, out_channels=4,
                       kernel_size=3, padding=1),
             nn.BatchNorm2d(num_features=4),
             nn.ReLU()
         )
+
         self.decoder = nn.Sequential(
             nn.Conv2d(in_channels=4, out_channels=32,
                       kernel_size=3, padding=1),
@@ -29,8 +31,7 @@ class ConvAutoEncoder(nn.Module):
         )
 
     def forward(self, t):
-        t = self.encoder(t)
-        t = self.compressor(t)
-        t = self.decoder(t)
+        enc = self.encoder(t)
+        dec = self.decoder(enc)
 
-        return t
+        return enc, dec
